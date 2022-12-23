@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.frogging.app.dao.MapsDAO">
+	<insert id = "courseInsert">
+		insert into course(course_name, course_info, distance, time, type, id)
+		values(#{course_name}, #{course_info}, #{distance}, #{time}, #{type}, #{id})
+	</insert>
+	<select id = "coursenoSearch" resultType = "int">
+		select course_no from course where course_name = #{param1}
+	</select>
+	<insert id = "coursedetailInsert">
+		insert into course_detail(course_no, waypoint, lat, log, addr)
+		value(${param1}, ${param2}, #{param3}, #{param4}, #{param5})
+	</insert>
+	<select id = "courseAllselect" resultType = "CourseVO">
+		select a.course_no course_no, a.course_name course_name, a.course_info course_info, a.distance distance, a.time time, b.addr startaddr, c.addr endaddr
+		from course a, (select * from course_detail where waypoint = 0) b left outer join 
+		(select course_no, addr from course_detail where waypoint = 99999) c 
+		on b.course_no = c.course_no where a.course_no = b.course_no;
+	</select>
+	<delete id = "courseDelete">
+		delete from course where course_no = ${param1}
+	</delete>
+	<select id = "courseSelect" resultType = "CourseVO">
+		select course_no, course_name, course_info, distance, time, type
+		from course where course_no = ${param1}
+	</select>
+	<select id = "detailSelect" resultType = "CourseVO">
+		select course_no, waypoint, lat, log, addr
+		from course_detail where course_no = ${param1} order by waypoint
+	</select>
+	<update id = "courseUpdate">
+		update course
+		set course_name = #{course_name}, course_info = #{course_info}, distance = #{distance}, time = #{time}, type = #{type}
+		where course_no = ${course_no}
+	</update>
+	<select id = "waypointCheck" resultType = "int">
+		select count(course_no) from course_detail where course_no = ${param1}
+	</select>
+	<update id = "coursedetailUpdate">
+		update course_detail
+		set lat = #{param3}, log = #{param4}, addr = #{param5}
+		where course_no = ${param1} and waypoint = #{param2}
+	</update>
+	<delete id = "waypointDelete">
+		delete from course_detail where course_no = ${param1} and waypoint = #{param2}
+	</delete>
+	<select id = "courseAllselect_t" resultType = "CourseVO">
+		select course_no, course_name, course_info, distance, time, type
+		from course
+		<if test = "searchWord != null">
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+		order by course_no desc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+	<select id = "detailAllselect_t" resultType = "CourseVO">
+		select course_no, waypoint, lat, log, addr
+		from course_detail
+		where course_no in (${param1},${param2},${param3},${param4},${param5},${param6})
+	</select>
+	<select id = "detailAllselect_tt" resultType = "CourseVO">
+		select course_no, waypoint, lat, log, addr
+		from course_detail
+		where course_no between ${param1} and ${param2}
+	</select>
+	<select id = "nameCheck" resultType = "int">
+		select count(course_name) from course where course_name = #{param1}
+	</select>
+	<select id = "courseCheck" resultType = "int">
+		select count(course_no) from course where course_no = ${param1}
+	</select>
+	<select id = "totalCourse" resultType = "int">
+		select count(course_no) from course
+		<if test = 'searchWord != null'>
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+</mapper>

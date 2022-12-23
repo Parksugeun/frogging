@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.frogging.app.dao.ActivityDAO">
+	<select id="getWeeklyKm" resultType="ActivityVO">
+	<!-- ver.8 up -->
+		<!-- select rank() over(order by sum(distance) desc ) rownum, (select nickname from user t2 where t2.id = t1.id) nickname, sum(distance) distance
+		from activity t1 
+		WHERE date(date) BETWEEN subdate(curdate(),date_format(curdate(),'%w')-1) 
+		AND subdate(curdate(),date_format(curdate(),'%w')-7)
+		group by id order by sum(distance) desc
+		limit 3  offset 0; -->
+
+		select @rownum:=@rownum+1 as rownum, t3.total_distance , (select nickname from user t2 where t2.id = t3.id) nickname
+		from
+		(select (select nickname from user t2 where t2.id = t1.id) nickname, TRUNCATE(sum(distance), 2)  total_distance , id
+		from activity as t1 
+		where date between subdate(curdate(),date_format(curdate(),'%w')+7) and now()
+		group by id order by sum(distance) desc) t3
+		where (@rownum:=0)=0 
+		limit 3  offset 0
+	</select>
+
+	<select id="getWeeklyCount" resultType="ActivityVO">
+	<!-- ver.8 up -->
+		<!-- select rank() over(order by count(id) desc ) rownum, (select nickname from user t2 where t2.id = t1.id) nickname, count(id) plog_count
+		from activity t1 
+		WHERE date(date) BETWEEN subdate(curdate(),date_format(curdate(),'%w')-1) 
+		AND subdate(curdate(),date_format(curdate(),'%w')-7)
+		group by id order by count(id) desc
+		limit 3  offset 0; -->
+
+		select @rownum:=@rownum+1 as rownum, t3.plog_count, (select nickname from user t2 where t2.id = t3.id) nickname
+		from
+		(select @rownum := 0,(select nickname from user t2 where t2.id = t1.id) nickname, count(id) plog_count, id
+		from activity as t1 
+		where date between subdate(curdate(),date_format(curdate(),'%w')+7) and now()
+		group by id order by count(id) desc) t3
+		<!-- where (@rownum:=0)=0 -->
+		limit 3  offset 0
+	</select>
+
+	<select id="getMonthlyKm" resultType="ActivityVO">
+	<!-- ver.8 up -->
+		<!-- select rank() over(order by sum(distance) desc ) rownum, (select nickname from user t2 where t2.id = t1.id) nickname, sum(distance) distance
+		from activity t1 
+		where date between date_format(now(), '%Y-%m-01') and now()
+		group by id order by sum(distance) desc
+		limit 3  offset 0 -->
+
+		select @rownum:=@rownum+1 as rownum, t3.total_distance , (select nickname from user t2 where t2.id = t3.id) nickname
+		from
+		(select (select nickname from user t2 where t2.id = t1.id) nickname, TRUNCATE(sum(distance), 2)  total_distance , id
+		from activity as t1 
+		where date between date_format(now(), '%Y-%m-01') and now()
+		group by id order by sum(distance) desc) t3
+		where (@rownum:=0)=0 
+		limit 3  offset 0
+	</select>
+
+	<select id="getMonthlyCount" resultType="ActivityVO">
+	<!-- ver.8 up -->
+		<!-- select rank() over(order by count(id) desc ) rownum, (select nickname from user t2 where t2.id = t1.id) nickname, count(id) plog_count
+		from activity t1 
+		where date between date_format(now(), '%Y-%m-01') and now()
+		group by id order by count(id) desc
+		limit 3  offset 0 -->
+
+		select @rownum:=@rownum+1 as rownum, t3.plog_count, (select nickname from user t2 where t2.id = t3.id) nickname
+		from
+		(select (select nickname from user t2 where t2.id = t1.id) nickname, count(id) plog_count, id
+		from activity as t1 
+		where date between date_format(now(), '%Y-%m-01') and now()
+		group by id order by count(id) desc) t3
+		where (@rownum:=0)=0
+		limit 3  offset 0
+	</select>
+
+	<select id="getRank_p" resultType="ActivityVO">
+
+		<!-- ver.8 up -->
+			select *
+			from
+			(select @rownum:=@rownum+1 as rownum, plog_count, id, @rownum:=0
+			from (
+			select count(id) plog_count, id
+			from activity as t1 
+			group by id order by count(id) desc)t2
+			)t3
+			where id = #{param1}
+	</select>
+
+	<select id="getRank_k" resultType="ActivityVO">
+		<!-- ver.8 up -->
+			select *
+			from
+			(select @rownum:=@rownum+1 as rownum, total_distance, id
+			from (
+			select sum(distance) total_distance, id
+			from activity as t1 
+			group by id order by sum(distance) desc)t2
+			where (@rownum:=0)=0)t3
+			where id = #{param1}
+	</select>
+
+
+
+
+	<select id="getUserStatistic" resultType="ActivityVO">
+		select sum(distance) total_distance, sum(step) total_step, count(no) plog_count, sum(amount_trash) trash_sum
+		from activity t1 
+		where id = #{param1}
+	</select>
+
+	<select id="getUserStatistic_w" resultType="ActivityVO">
+		select SUBSTR(YEARWEEK(now()),5) as week, sum(distance) total_distance, sum(step) total_step, count(no) plog_count, sum(amount_trash) trash_sum
+		from activity t1 
+		where id = #{param1} and YEARWEEK(date) = YEARWEEK(now())
+	</select>
+
+	<select id="getUserStatistic_m" resultType="ActivityVO">
+		select month(now()) as month, TRUNCATE(sum(distance), 2)  total_distance,  sum(step) total_step, count(no) plog_count, sum(amount_trash) trash_sum
+		from activity t1 
+		where id = #{param1} and date between date_format(now(), '%Y-%m-01') and now()
+	</select>
+
+	<select id="getUserStatistic_y" resultType="ActivityVO">
+		<!-- select sum(distance) total_distance, sum(step) total_step, count(no) plog_count, sum(amount_trash) trash_sum
+		from activity t1 
+		where id = #{param1} and date between date_format(now(), '%Y-01') and now() -->
+
+		select year(now()) as year, TRUNCATE(sum(distance), 2)  total_distance,  sum(step) total_step, count(no) plog_count, sum(amount_trash) trash_sum
+		from activity t1 
+		where id = #{param1}
+	</select>
+
+
+
+	<select id="getActivityList" resultType="ActivityVO">
+		select course_name, distance, step, time, amount_trash, date_format(date,'%m-%d %h:%i') date, sort 
+		from activity 
+		where id = #{param1}
+		order by date desc
+		limit 3  offset 0
+	</select>
+
+
+
+	<select id="getGraph_w" resultType="ActivityVO">
+		SELECT  DATE_FORMAT(any_value(date), '%Y%U') AS week, sum(distance) total_distance
+		FROM activity 
+		where id = #{param1}
+		group by week 
+		order by week desc limit 8  offset 0
+	</select>
+
+	<select id="getGraph_m" resultType="ActivityVO">
+		SELECT MONTH(any_value(date)) AS month,  sum(distance) total_distance
+		FROM activity 
+		where id = #{param1} and date between date_format(now(), '%Y-01') and now()
+		group by month
+		order by month
+	</select>
+
+	<select id="getGraph_y" resultType="ActivityVO">
+		SELECT year(any_value(date)) AS year, sum(distance) total_distance
+		FROM activity 
+		where id = #{param1}
+		group by year
+		order by year limit 3  offset 0
+	</select>
+
+	<select id="getGraph_t" resultType="ActivityVO">
+		SELECT date(any_value(date)) AS date, sum(distance) total_distance
+		FROM activity 
+		where id = #{param1}
+		group by date
+		order by date limit 12  offset 0
+	</select>
+
+	<select id="getPlogGraph" resultType="ActivityVO">
+		SELECT MONTH(any_value(date)) AS month,  
+		TRUNCATE(sum(distance), 2)  total_distance, 
+		count(id) plog_count, 
+		sum(step) total_step,
+		TRUNCATE(sum(time),2) total_time,
+		TRUNCATE(sum(amount_trash),2) trash_sum
+		FROM activity 
+		group by month
+		order by month desc
+	</select>
+
+
+	<!-- 불량 유저 번호 확인!!!!! -->
+	<select id="numberOfBad" resultType="int">
+		select count(id) from user where restriction = 1
+	</select>
+
+	<select id="numberOfGood" resultType="int">
+		select count(id) from user where restriction = 0
+	</select>
+
+	<select id="numberOfUnactive" resultType="int">
+		select count(t1.id) from
+		(select id from user
+		where id not in 
+		(select id from activity group by id)) t1
+	</select>
+
+	<select id="numberOfActive" resultType="int">
+		select count(t1.id) from (
+		select id from activity group by id) t1
+	</select>
+
+
+	<select id="getTrashGraph" resultType="ActivityVO">
+		SELECT MONTH(any_value(date)) AS month,  
+		sum(amount_trash) trash_sum
+		FROM activity 
+		group by month
+		order by month
+	</select>
+	
+	<insert id = "activityInsert">
+		insert into activity(id, course_no, course_name, distance, step, time, amount_trash, date, sort)
+		values(#{id}, #{course_no}, #{course_name}, #{distance}, ${step}, #{time}, #{amount_trash}, now(), ${sort})
+	</insert>
+	
+	<insert id = "courseuserInsert">
+		insert into course_user(course_no, id, waypoint, lat, log, activity_no)
+		values(${param1}, #{param2}, ${param3}, #{param4}, #{param5}, ${param6})
+	</insert>
+	
+	<select id = "getActivityNo" resultType = "int">
+		select no from activity 
+		where id = #{param1}
+		order by no desc limit 1;
+	</select>
+	<select id = "totalUserCourse" resultType = "int">
+		select count(no)
+		from activity
+		where id = #{id}
+		<if test = 'searchWord != null'>
+			and ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+	<select id = "activityAllSelect" resultType = "ActivityVO">
+		select course_no, course_name, distance, step, time, amount_trash, date_format(date,'%m-%d %h:%i') date, sort, no
+		from activity
+		where id = #{id}
+		<if test = 'searchWord != null'>
+			and ${searchKey} like '%${searchWord}%'
+		</if>
+		order by no desc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+	<select id = "courseUserAllSelect" resultType = "CourseVO">
+		select course_no, waypoint, lat, log, activity_no
+		from course_user
+		where activity_no in (${param1}, ${param2}, ${param3})
+	</select>
+</mapper>

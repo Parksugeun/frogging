@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.frogging.app.dao.QnaDAO">
+	
+	<insert id="qnaWriteOk">
+		 
+		<selectKey resultType="int" keyProperty="reply_group" order="BEFORE">
+		  select ifnull(MAX(reply_group), 0) + 1 
+	        from board_question    
+	    </selectKey>
+		insert into board_question(id, subject, content, reply_group, reply_seq, depth )
+		values(#{id}, #{subject}, #{content}, #{reply_group}, 0, 0 )
+	</insert>
+		
+	<select id="qnaList" resultType="QnaVO">
+		select qna.no, qna.subject, qna.id, qna.reply_group, qna.reply_seq, qna.depth, qna.hit, date_format(qna.writedate, '%y.%m.%d %h:%i') writedate, user.nickname name
+		from board_question qna, user user
+		where qna.id = user.id
+		<if test="searchWord!=null">
+			and ${searchKey} like '%${searchWord}%'
+		</if>
+		order by reply_group desc, depth asc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+	
+	<delete id="qnaDel">
+		delete from board_question where reply_group=${param1} 
+	</delete>
+	<!-- and id=#{param2} -->
+	<delete id="qnaDel2">
+		delete from board_question where no=${param1} 
+	</delete>
+	
+	<delete id="qnaParentDel">
+		delete from board_question where no=${param1} and id=#{param2}
+	</delete>
+	
+		
+	<select id="getQnaReplyInfo" resultType="QnaVO" parameterType="int"><!--  -->
+	    select no, reply_group, depth, reply_seq
+	    from board_question
+	    where no = #{no}	 
+	</select>
+	
+	
+	<select id="qnaReply" resultType="QnaVO" parameterType="int">
+		select no, reply_group, depth, reply_seq
+		from board_question
+		where no=${param1}
+	</select>
+		 
+	<update id="qnaUpdate">
+		update board_question set reply_seq = reply_seq + 1 
+		where reply_group = #{reply_group} and reply_seq > #{reply_seq}
+	</update>	
+	
+	<!-- 
+	<update id="qnaUpdate">
+		update board_question set depth = depth + 1 
+		where reply_group = #{reply_group} and depth > 0
+	</update>	
+	 -->
+	
+	<insert id="qnaReplyOk">
+		insert into board_question(id, subject, content, reply_group, reply_seq,  depth )
+		values(#{id}, #{subject}, #{content}, #{reply_group}, #{reply_seq} +1, #{depth} +1 )
+	</insert>
+		
+
+	
+	<update id="qnaEditOk" parameterType="QnaVO">
+		update board_question set subject=#{subject}, content=#{content} where no=${no} and id=#{id}
+	</update>
+		
+	<select id="totalRecord" resultType="int">
+		select count(no) cnt from board_question
+		  <if test='searchWord!=null'>
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+	<select id="getQna" resultType="QnaVO" parameterType="int">
+		select qna.no, qna.reply_group, qna.subject, qna.content, qna.hit, qna.id, qna.writedate, qna.depth, user.nickname name
+		from board_question qna, user user
+		where no=${param1} and qna.id = user.id
+	</select>
+	
+	<update id="hitCount">
+		update board_question set hit = hit+1 where no = ${param1}
+	</update> 
+</mapper>
+
+
+
+

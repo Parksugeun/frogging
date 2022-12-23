@@ -1,0 +1,94 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="UTF-8">
+	<title>Frogging</title>
+	<script src="https://code.jquery.com/jquery-3.6.1.min.js" 
+      integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="/css/p_style.css" type="text/css"/>
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Black+And+White+Picture&family=Black+Han+Sans&family=Cute+Font&family=Do+Hyeon&family=Dokdo&family=East+Sea+Dokdo&family=Gaegu&family=Gamja+Flower&family=Gothic+A1&family=Gugi&family=Hi+Melody&family=Jua&family=Kirang+Haerang&family=Nanum+Brush+Script&family=Nanum+Gothic&family=Nanum+Gothic+Coding&family=Nanum+Myeongjo&family=Nanum+Pen+Script&family=Noto+Sans+KR&family=Noto+Serif+KR&family=Poor+Story&family=Single+Day&family=Song+Myung&family=Stylish&family=Sunflower:wght@300&family=Yeon+Sung&display=swap" rel="stylesheet">
+	
+	<%-- ksh --%>
+	<%-- <link rel="stylesheet" href="/css/k_style.css">
+	<link rel="stylesheet" href="https://use.typekit.net/mss6mty.css">
+	<script src="https://kit.fontawesome.com/ab847241fd.js" crossorigin="anonymous"></script> --%>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet">
+
+
+	</head>
+<style>
+	@media screen and (min-width:152px) and (max-width:1024px){
+	.topWrap{display:none;}
+	}
+</style>
+<body>
+
+<div class="topWrap">	
+    <div class="p_headerWrap">
+                <span class="p_logo" style="height:100px;">
+                	<a href="/" style="height:100px;">
+                    	<img src="/img/logo3.png" alt="로고" style="width:180px; height:80px; margin-top:10px;">
+                    </a>
+    			</span>
+                <ul id="p_menu">
+                    <li><a href="/introductionForm">소개</a></li>
+                    <li><a href="/ranking/rankingForm">랭킹</a></li>
+                    <li><a href="#">프로깅 시작</a>
+                    	<ul class="p_subMenu">
+                    	<li><a href="/club/join_club">함께하기</a></li>
+                    	<li><a href="/alone/alone_rec_path">혼자하기</a></li>
+                    	</ul>
+                    </li>	
+                    <li><a href="#">게시판</a>
+                    	<ul class="p_subMenu">
+                    	<li><a href="/community/communityList">커뮤니티</a></li>
+                    	<li><a href="/event/eventList">이벤트</a></li>
+                    	<li><a href="/qna/qnaList">QnA</a></li>
+						<li><a href="/customerService/customerServiceList">고객센터</a></li>
+                    	</ul>
+                    </li>	     
+                    <!-- 로그인 버튼 -->
+				</ul>	
+
+				<c:if test="${logStatus==null}">	
+					<span class="p_login">
+							<a href="/login" class="p_menu-log">로그인</a>
+							<a href="#" class="p_menu-join">회원가입</a>
+					</span>
+                 </c:if>
+                 <c:if test="${logStatus=='Y'}">
+                 	<span class="p_login">
+        					<a href="/logout" class="p_menu-log">로그아웃</a>
+							<a href="/mypage/my" class="p_menu-join">마이페이지</a>
+					</span>
+
+     			   </c:if>
+     			   
+     			    <c:if test="${logStatus=='Admin'}">
+                 	<span class="p_login">
+        					<a href="/logout" class="p_menu-log">로그아웃</a>
+							<a href="/admin/statistic" class="p_menu-join">관리자페이지</a>
+							<a href="/mypage/my" class="p_menu-join">마이페이지</a>
+					</span>
+     			   </c:if>
+
+                
+	</div>
+</div>	
+	<script>
+		// 마우스오버 메뉴
+		  $('#p_menu > li').mouseover(function(){
+		    $(this).find('.p_subMenu').stop().slideDown(300);
+		  }).mouseout(function(){
+		    $(this).find('.p_subMenu').stop().slideUp(300);
+		  });
+
+	</script>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.frogging.app.dao.CustomerServiceDAO">
+	
+	<insert id="customerServiceWriteOk">
+		 
+		<selectKey resultType="int" keyProperty="reply_group" order="BEFORE">
+		  select ifnull(MAX(reply_group), 0) + 1 
+	        from board_customerservice    
+	    </selectKey>
+		insert into board_customerservice(id, subject, content, reply_group, depth )
+		values(#{id}, #{subject}, #{content}, #{reply_group}, 0 )
+	</insert>
+			
+	<select id="customerServiceList" resultType="CustomerServiceVO">
+		select cs.no, cs.subject, cs.id, cs.reply_group, cs.depth, cs.hit, date_format(cs.writedate, '%y.%m.%d %h:%i') writedate, user.name name
+		from board_customerservice cs, user user
+		where cs.id = user.id
+		<if test="searchWord!=null">
+			and ${searchKey} like '%${searchWord}%'
+		</if>
+		order by reply_group desc, depth asc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+
+
+	<delete id="customerServiceDel">
+		delete from board_customerservice where reply_group=${param1} 
+	</delete>
+	<!-- and id=#{param2} -->
+	<delete id="customerServiceDel2">
+		delete from board_customerservice where no=${param1} 
+	</delete>
+	
+		
+	<select id="getcustomerServiceReplyInfo" resultType="CustomerServiceVO" parameterType="int"><!--  -->
+	    select no, reply_group, depth
+	    from board_customerservice
+	    where no = #{no}	 
+	</select>
+	
+	
+	<select id="customerServiceReply" resultType="CustomerServiceVO" parameterType="int">
+		select no, reply_group, depth
+		from board_customerservice
+		where no=${param1}
+	</select>
+	
+	 <!--  
+	<update id="customerServiceUpdate">
+		update board_customerservice set reply_seq = reply_seq + 1 
+		where reply_group = #{reply_group} and reply_seq >= #{reply_seq}
+	</update>	
+		-->
+	<insert id="customerServiceReplyOk">
+		insert into board_customerservice(id, subject, content, reply_group, depth )
+		values(#{id}, #{subject}, #{content}, #{reply_group}, #{depth} +1 )
+	</insert>
+		
+
+	
+	<update id="customerServiceEditOk" parameterType="CustomerServiceVO">
+		update board_customerservice set subject=#{subject}, content=#{content} where no=${no} and id=#{id}
+	</update>
+		
+	<select id="totalRecord" resultType="int">
+		select count(no) cnt from board_customerservice
+		  <if test='searchWord!=null'>
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+	<select id="getcustomerService" resultType="CustomerServiceVO" parameterType="int">
+		select cs.no, cs.reply_group, cs.subject, cs.content, cs.hit, cs.id, cs.writedate, cs.depth, user.name name
+		from board_customerservice cs, user user
+		where no=${param1} and cs.id = user.id
+	</select>
+	
+	<update id="hitCount">
+		update board_customerservice set hit = hit+1 where no = ${param1}
+	</update> 
+</mapper>
+
+
+
+

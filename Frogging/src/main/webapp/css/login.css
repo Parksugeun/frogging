@@ -1,0 +1,29 @@
+@charset "UTF-8";
+
+body, ul, li{
+		margin: 0;
+		padding: 0;
+		text-decoration: none;
+	}
+
+.s_container{
+				padding: 0;
+				text-align: center;
+				width: 100%;
+			}			
+	
+#s_log input[type=image]{
+	width: 320px;
+	
+}
+
+#s_singup a:hover{
+	color: #2FB86A;
+}
+		
+		
+
+		 
+
+		
+	

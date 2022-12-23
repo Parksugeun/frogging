@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.frogging.app.dao.DataDAO">
+	<select id="getAddr_1" resultType="AddrVO">
+		select DISTINCT addr_section_1 
+		from addr_detail 
+	</select>
+
+	<select id="getAddr_2" resultType="AddrVO">
+		select no, addr_section_2
+		from addr_detail 
+		where addr_section_1 like '%${param1}%'
+		order by addr_section_2
+	</select>
+</mapper>

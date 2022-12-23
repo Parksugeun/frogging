@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.frogging.app.dao.LoginDAO">
+<select id = "loginCheck" resultType = "int">
+		select count(*) from user where id=#{id}
+</select>
+<select id = "loginOk" resultType="UserVO">
+		select * from user where id=#{id}
+</select>
+<insert id="signUpOk">
+		insert into user(id, name, nickname, sex, height, restriction)
+		values(#{id}, #{name}, #{nickname}, #{sex}, #{height}, #{restriction})
+</insert>
+<select id="nicknameCheck" resultType="int">
+		select count(*) from user where nickname = #{nickname}
+</select>
+<select id="checkAdmin" resultType="int">
+		select count(*) from manager where id = #{id}
+</select>
+</mapper>

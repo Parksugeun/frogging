@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.frogging.app.dao.UserDAO">
+  <select id="getUserDetail" resultType="UserVO">
+    select id, name, nickname, height, sex, restriction
+    from user
+    where id = #{param1}
+  </select>
+
+  <select id="getMyWrite" resultType="CommunityVO">
+		select no, subject, id, hit, date_format(writedate, '%m-%d %h:%i') writedate
+		from board_community
+		where id = #{param1}
+		order by no desc
+		<!-- limit ${onePageRecord} offset ${offsetPoint} -->
+	</select>
+
+  <select id="getMyWrite_qna" resultType="QnaVO">
+		select no, subject, id, hit, date_format(writedate, '%m-%d %h:%i') writedate
+		from board_question
+		where id = #{param1}
+		order by no desc
+		<!-- limit ${onePageRecord} offset ${offsetPoint} -->
+	</select>
+
+	<select id="getMyWrite_service" resultType="QnaVO">
+		select no, subject, id, hit, date_format(writedate, '%m-%d %h:%i') writedate
+		from board_customerservice
+		where id = #{param1}
+		order by no desc
+		<!-- limit ${onePageRecord} offset ${offsetPoint} -->
+	</select>
+
+	<select id="getRecord" resultType="ActivityVO">
+		select sum(distance) total_distance, sum(amount_trash) trash_sum
+		from activity t1 
+		where id = #{param1}
+  </select>
+
+	<select id="getUserCourse" resultType="CourseVO">
+		select 
+		course.course_no,
+		course.course_name,
+		course.distance, 
+		course.time,
+		course.type,
+		detail.addr
+		from 
+
+		(
+			select 
+			course_no, course_name, distance,time, type
+			from course
+			where id = #{id}
+		) course
+
+		left outer join
+
+		(select course_no, addr
+		from course_detail
+		where waypoint = 0 ) detail
+		on course.course_no = detail.course_no
+		order by course_no desc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+
+	<update id="detailEditOk">
+		update user
+		set height=#{height}, sex=${sex}, nickname=#{nickname}
+		where id=#{id}
+	</update>
+
+	<select id="setTotalRecord_my" resultType="int">
+	select count(course_no) from course
+	where id = #{id}
+	</select>
+
+	<select id = "courseAllselect_t" resultType = "CourseVO">
+		select course_no, course_name, course_info, distance, time, type
+		from course
+		where id = #{id}
+		order by course_no desc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+
+	<select id="checkUserStatus" resultType="int">
+		select restriction
+		from user
+		where id = #{param1}
+	</select>
+</mapper>
+

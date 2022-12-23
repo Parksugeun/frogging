@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.frogging.app.dao.CommunityReplyDAO">
+	
+	<select id="replyList" resultType="CommunityReplyVO">
+		select reply.reply_no, reply.no, reply.depth, reply.reply_group, reply.id, reply.content, date_format(reply.writedate, '%y년%m월%d일%h시%i분') writedate, user.nickname nickname
+		from reply_community reply, user user
+		where no=${param1} and reply.id = user.id
+		order by reply_group asc, depth asc
+	</select>
+	
+	<insert id="replyInsert">
+		<selectKey resultType="int" keyProperty="reply_group" order="BEFORE">
+		  select ifnull(MAX(reply_group), 0) + 1 
+	        from reply_community    
+	    </selectKey>
+		insert into reply_community(no, id, content, depth, reply_group)
+		values(#{no}, #{id}, #{content}, #{depth}, #{reply_group})
+	</insert>
+
+	<update id="replyUpdate">
+		update reply_community set content=#{content}
+		where reply_no=${reply_no} and id=#{id}
+	</update>
+	
+	<delete id="replyDelete">
+		delete from reply_community where reply_no=${param1} and id=#{param2}
+	</delete>
+	
+	<select id="replyInfo" resultType="CommunityReplyVO">
+		select no, reply_group, depth
+		from reply_community
+		where reply_no= #{reply_no}
+	</select>
+	
+	
+	<insert id="reReplyInsert">
+		insert into reply_community(no, reply_group, depth, id, content)
+		values(#{no}, #{reply_group}, #{depth}, #{id}, #{content})	
+	</insert>	
+	
+</mapper>

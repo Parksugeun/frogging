@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.frogging.app.dao.AdminDAO">
+	<select id="userList" resultType="UserVO">
+		select id, name, nickname, height, sex, restriction 
+		from user 
+	</select>
+	<delete id="listDel">
+		delete from user where id=#{param1 }
+	</delete>
+	<select id="getProfile" resultType="UserVO">
+		select id, name, nickname, height, sex, restriction 
+		from user where id=#{param1 }
+	</select>
+	<update id="editProfile">
+		update user set restriction=${param2 } where id=#{param1}
+	</update>
+	
+	<select id="communityList" resultType="CommunityVO">
+		select b1.no, b1.subject, b1.id, b1.hit, b1.writedate, b2.reply_count
+		from
+		(select no, subject, id, hit, date_format(writedate, '%m-%d %h:%i') writedate
+		from board_community
+		<if test="searchWord!=null">
+			where ${searchKey} like '%${searchWord}%'
+		</if>	
+		order by no desc
+		limit ${onePageRecord} offset ${offsetPoint}) b1
+		left outer join
+		(select no, count(no) reply_count from reply_community group by no) b2
+		on b1.no=b2.no
+	</select>
+	<select id="totalRecord" resultType="int">
+		select count(no) cnt from board_community
+		<if test='searchWord!=null'>
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+	
+	<select id="customerServiceList" resultType="CustomerServiceVO">
+		select no, subject, id, reply_group, depth, hit, date_format(writedate, '%y.%m.%d %h:%i') writedate
+		from board_customerservice 
+		<if test="searchWord!=null">
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+		order by reply_group desc, depth asc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+	<select id="getcustomerService" resultType="CustomerServiceVO" parameterType="int">
+		select no,reply_group, subject, content, hit, id, writedate
+		from board_customerservice
+		where no=${param1}
+	</select>
+	
+	<select id="totalRecord2" resultType="int">
+		select count(no) cnt from board_customerservice
+		  <if test='searchWord!=null'>
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+	
+	<delete id="customerServiceDel">
+		delete from board_customerservice where no=${param1}
+	</delete>
+	
+	<select id="eventList" resultType="EventVO">
+		select no, subject, content, id, hit, date_format(writedate, '%y년%m월%d일') writedate
+		from board_event
+		<if test="searchWord!=null">
+			where ${searchKey} like '%${searchWord}%'
+		</if>	
+		order by no desc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+		
+	<select id="totalRecord4" resultType="int">
+		select count(no) cnt from board_event
+		<if test='searchWord!=null'>
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+	
+	<delete id="eventDel">
+		delete from board_event where no=${param1}
+	</delete>
+	<select id="qnaList" resultType="QnaVO">
+		select no, subject, id, reply_group, reply_seq, depth, hit, date_format(writedate, '%y.%m.%d %h:%i') writedate
+		from board_question 
+		<if test="searchWord!=null">
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+		order by reply_group desc, depth asc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+	<select id="totalRecord3" resultType="int">
+		select count(no) cnt from board_question
+		  <if test='searchWord!=null'>
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+	
+	<delete id="qnaDel">
+		delete from board_question where reply_group=${param1}
+	</delete>
+	
+	<delete id="qnaDel2">
+		delete from board_question where no=${param1}
+	</delete>
+	<select id="getQna" resultType="QnaVO" parameterType="int">
+		select no,reply_group, subject, content, hit, id, writedate, depth
+		from board_question
+		where no=${param1}
+	</select>
+	<select id="totalRecord5" resultType="int">
+		select count(course_no) cnt from course
+		<if test='searchWord!=null'>
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+
+	<select id="totalRecord6" resultType="int">
+		select count(no) cnt from party
+		<if test='searchWord!=null'>
+			where ${searchKey} like '%${searchWord}%'
+		</if>
+	</select>
+	
+</mapper>

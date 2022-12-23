@@ -1,0 +1,448 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.frogging.app.dao.PartyDAO">
+	<insert id="newPartyRequest">
+		insert into party_detail(party_no, user_id, join_status)
+		values(#{party_no},#{user_id},#{join_status});
+	</insert>
+
+	<select id="getPartyList" resultType="PartyVO">
+		select 
+		party.no,
+		party.partyname, 
+		party.number,
+		party.current_number,
+		course.course_name, 
+		party.course_no, 
+		party.id, 
+		party.content, 
+		party.meeting_place,
+		party.meeting_time,
+		detail.addr
+		from 
+
+		(select 
+		no, partyname, number, current_number, course_no, id, 
+		content, meeting_place, date_format(meeting_time,'%m-%d %h:%i') meeting_time
+		from party
+		where meeting_time > now()
+		<if test="searchDate!=null">
+			and meeting_time between '${searchDate}' and date_add('${searchDate}', interval 7 day)
+		</if>
+		order by meeting_time )party
+
+		left outer join
+		(select 
+		course_no, course_name
+		from course) course
+		on party.course_no = course.course_no
+
+		left outer join
+		(select course_no, addr
+		from course_detail
+		where waypoint = 1 ) detail
+		on course.course_no = detail.course_no
+		
+		<if test="searchLoc!=null">
+			where detail.addr like "%${addr_section_1}%" and detail.addr like "%${addr_section_2}%"
+		</if>
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+
+
+	<select id="getPathList" resultType="CourseVO">
+		select 
+		course.course_no,
+		course.course_name,
+		course.distance, 
+		course.time,
+		course.type,
+		activity.plog_total,
+		detail.addr
+		from 
+
+		(
+			select 
+			course_no, course_name, distance,time, type
+			from course
+		) course
+
+		left outer join
+
+		(
+			select 
+			course_no, count(course_no) plog_total
+			from activity
+			group by course_no
+		) activity
+
+		on activity.course_no = course.course_no
+
+		left outer join
+
+		(select course_no, addr
+		from course_detail
+		where waypoint = 0 ) detail
+		on course.course_no = detail.course_no
+
+		<if test="searchLoc!=null">
+			where detail.addr like "%${addr_section_1}%" and detail.addr like "%${addr_section_2}%"
+		</if>
+		order by course_no desc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+
+<select id="getPathList_m" resultType="CourseVO">
+		select 
+		course.course_no,
+		course.course_name,
+		course.distance, 
+		course.time,
+		course.type,
+		activity.plog_total,
+		detail.addr
+		from 
+
+		(
+			select 
+			course_no, course_name, distance,time, type
+			from course
+		) course
+
+		left outer join
+
+		(
+			select 
+			course_no, count(course_no) plog_total
+			from activity
+			group by course_no
+		) activity
+
+		on activity.course_no = course.course_no
+
+		left outer join
+
+		(select course_no, addr
+		from course_detail
+		where waypoint = 0 ) detail
+		on course.course_no = detail.course_no
+		order by course_no desc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+
+
+	<select id="totalRecord" resultType="int">
+		select count(no) cnt from party
+		<!-- <if test="searchLoc!=null">
+			where ${searchLoc} like '%${searchLoc}%'
+		</if> -->
+
+		<if test="searchDate!=null">
+			where meeting_time between '${searchDate}' and date_add('${searchDate}', interval 7 day)
+		</if>
+	</select>
+
+	<select id="totalRecord_path" resultType="int">
+		select count(course_no)
+		from course_detail
+		where waypoint = 0 
+		and addr like "%${addr_section_1}%" 
+		and addr like "%${addr_section_2}%"
+		
+	</select>
+
+	<insert id="addNewParty">
+		insert into party(partyname, id,  number, current_number, course_no, content, meeting_place, meeting_time)
+		values(#{partyname}, #{id}, ${number}, ${current_number}, ${course_no}, #{content}, #{meeting_place}, #{meeting_time})
+	</insert>
+
+	<insert id="addNewPartyDetail">
+		insert into party_detail(party_no, user_id, join_status)
+		values(${party_no}, #{user_id}, ${join_status})
+	</insert>
+
+
+	<update id="countCurrentNum">
+		update party
+		set current_number = current_number + 1
+		where no = ${param1};
+	</update>
+
+
+	<update id="decreaseCurrentNum">
+		update party
+		set current_number = current_number -1
+		where no = ${param1};
+	</update>
+
+	<select id="getPartyDetail" resultType="PartyVO" parameterType="int">
+		select 
+		party.no,	
+		party.partyname, 	
+		party.number,	
+		party.current_number,	
+		course.course_name, 	
+		party.course_no, 	
+		party.id, 	
+		party.content, 	
+		party.meeting_place,	
+		party.meeting_time,
+		course.time,
+		course.distance,
+		detail.addr
+
+		from
+		(select 
+		no, partyname, number, current_number, course_no, id, 
+		content, meeting_place, date_format(meeting_time,'%m-%d %h:%i') meeting_time
+		from party
+		where no=${param1}
+		order by meeting_time) party
+
+		left outer join
+		(select course_no, course_name ,distance, time from course) course
+		on party.course_no = course.course_no
+
+		left outer join
+		(select course_no, addr
+		from course_detail
+		where waypoint = 1 ) detail
+		on course.course_no = detail.course_no
+	</select>
+
+	<select id="getLeaderInfo" resultType="ActivityVO" parameterType="String">
+		select 
+		user.nickname, 
+		activity.total_distance, 
+		activity.plog_count 
+		from 
+		( 
+			select id, nickname 
+			from user 
+			where id = #{param1}
+		) user
+		left outer join 
+		( 
+			select id, TRUNCATE(sum(distance),2) total_distance, count(no) plog_count 
+			from activity 
+			where id = #{param1}
+			group by id
+		) activity
+		on user.id = activity.id
+	</select>
+
+	<select id="checkOverlap" resultType="int">
+		select count(no) 
+		from party_detail 
+		where user_id like #{user_id} and party_no = ${party_no}
+	</select>
+
+	<select id="getMyJoinedClub" resultType="PartyVO">
+		select
+		t2.no,
+		t2.partyname,
+		t2.id, 
+		t2.number,
+		t2.current_number, 
+		t2.course_no,
+		t2.content,
+		t2.meeting_place,
+		t2.meeting_time, 
+		t1.join_status,
+		t3.course_name,
+		(select reason from party_request t4 where t4.party_no = t2.no and t4.party_detail_no = t1.no) reason
+		from
+		(
+			select no, party_no, user_id, join_status
+			from party_detail
+			where user_id = #{user_id}
+			<if test="join_status==4">
+				and join_status = 4
+			</if> 
+			<if test="join_status!=4">
+				and join_status != 4
+			</if> 
+		) t1
+		left outer join
+		(
+			select no, partyname, id,  number, current_number, course_no, content, meeting_place, date_format(meeting_time,'%m-%d %h:%i') meeting_time
+			from party
+		) t2
+		on t1.party_no = t2.no
+
+		left outer join
+		(
+			select course_no, course_name
+			from course
+		) t3
+		on t2.course_no = t3.course_no
+	</select>
+
+	<select id="getMaxNo" resultType="int">
+		select max(no) from party;
+	</select>
+
+	<select id="getPathDetail" resultType="CourseVO">
+		select 
+		course.course_no,
+		course.course_name,
+		course.distance, 
+		course.course_info,
+		course.time,
+		course.type,
+		activity.plog_total,
+		(select addr from course_detail as detail 
+		where waypoint = 0 and detail.course_no = course.course_no) startaddr ,
+		(select addr from course_detail as detail 
+		where waypoint = 1 and detail.course_no = course.course_no) endaddr 
+		from 
+
+		(
+			select 
+			course_no, course_name, distance,time,type,course_info
+			from course
+			where course_no = ${param1}
+		) course
+
+		left outer join
+
+		(
+			select 
+			course_no, count(course_no) plog_total
+			from activity
+			group by course_no
+		) activity
+
+		on activity.course_no = course.course_no
+	</select>
+
+	<select id="partynameCheck" resultType="int">
+		select count(*) from party where partyname = #{partyname}
+	</select>	
+
+	<insert id="rewriteParty" parameterType="PartyVO">
+		update party
+		set partyname=#{partyname}, number=${number}, meeting_time=#{meeting_time}, meeting_place=#{meeting_place},content=#{content}
+		where no=${no} and id=#{id};
+	</insert>
+
+	<delete id="deleteClub">
+		delete from party
+		where no = ${param1}
+	</delete>
+
+	<delete id="deleteClubDetail">
+		delete from party_detail
+		where party_no = ${param1}
+	</delete>
+
+	<delete id="deleteClubDetail_2">
+		delete from party_detail
+		where party_no = ${param1}
+		<if test="#{param2}!=null">
+				and user_id = #{param2}
+			</if> 
+	</delete>
+
+	<select id="getMemberDetail" resultType="PartyDetailVO">
+		select 
+		detail.party_no, 
+		detail.user_id, 
+		detail.join_status,
+		(select nickname from user where user.id = detail.user_id ) nickname, 
+		(select partyname from party where party.no = detail.party_no ) partyname
+		from 
+		(select party_no, user_id, join_status
+		from party_detail 
+		where party_no = #{param1}) detail
+	</select>
+
+	<update id="changeStatus">
+		update party_detail
+		set join_status = join_status + 1
+		where party_no = ${param1} and user_id = #{param2};
+	</update>
+
+	<update id="changeStatus_2">
+		update party_detail
+		set join_status = join_status + 2
+		where party_no = ${param1} and user_id = #{param2};
+	</update>
+
+	<select id="getPartyDetailNo" resultType="int">
+		select no 
+		from party_detail
+		where party_no = ${param1} and user_id like #{param2}
+	</select>
+
+	<insert id="addReason">
+		insert into party_request(party_no, party_detail_no, reason)
+		value(${param1}, ${param2}, ${param3})
+	</insert>
+
+
+	<select id="getTotalClub" resultType="PartyVO">
+		select
+		t2.no,
+		t2.partyname,
+		t2.id, 
+		t2.number,
+		t2.current_number, 
+		t2.course_no,
+		t2.content,
+		t2.meeting_place,
+		t2.meeting_time, 
+		t3.course_name
+		from
+	
+		(
+			select no, partyname, id,  number, current_number, course_no, content, meeting_place, date_format(meeting_time,'%m-%d %h:%i') meeting_time
+			from party
+		) t2
+
+		left outer join
+		(
+			select course_no, course_name
+			from course
+		) t3
+		on t2.course_no = t3.course_no
+
+		order by t2.no desc
+		limit ${onePageRecord} offset ${offsetPoint}
+	</select>
+
+	<delete id="deleteClubRequest">
+		delete from party_request
+		where party_no = ${param1}
+	</delete>
+
+	<delete id="clubMultiDel">
+		delete from party
+		<where>
+			<foreach item="item" index="index" collection="noList" open="no in (" separator="," close=")">
+              ${item}
+			</foreach>
+		</where>
+	</delete>
+
+	<delete id="clubMultiDel_detail">
+		delete from party_detail
+		<where>
+			<foreach item="item" index="index" collection="noList" open="party_no in (" separator="," close=")">
+              ${item}
+			</foreach>
+		</where>
+	</delete>
+
+	<delete id="clubMultiDel_request">
+		delete from party_request
+		<where>
+			<foreach item="item" index="index" collection="noList" open="party_no in (" separator="," close=")">
+              ${item}
+			</foreach>
+		</where>
+	</delete>
+</mapper>
